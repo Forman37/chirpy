@@ -6,8 +6,13 @@ import (
 	"log"
 )
 
+type welcomeScreen struct{}
+
+func (welcomeScreen) ServeHTTP(http.ResponseWriter, *http.Request) {}
+
 func main() {
 	mux := http.NewServeMux()
+	mux.Handle("/", http.FileServer(http.Dir(".")))
 
 	server := &http.Server{
 		Addr: ":8080",

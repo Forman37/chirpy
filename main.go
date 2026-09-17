@@ -2,8 +2,22 @@ package main
 
 import (
 	"fmt"
+	"net/http"
+	"log"
 )
+
 func main() {
-	fmt.Println("Hello, World!")
+	mux := http.NewServeMux()
+
+	server := &http.Server{
+		Addr: ":8080",
+		Handler: mux,
+	}
+	fmt.Println("Starting server on http://localhost:8080 ...")
+
+	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		log.Fatalf("Server failed to start: %v", err)
+	}
+
 }
 

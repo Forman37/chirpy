@@ -5,7 +5,6 @@ import (
 	"net/http"
 )
 
-
 func (cfg *apiConfig) checkViews(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
@@ -21,14 +20,14 @@ func (cfg *apiConfig) checkViews(w http.ResponseWriter, _ *http.Request) {
 		</html>
 		`,
 		val,
-		)
+	)
 
 	fmt.Fprintf(w, template)
 }
 
 func (cfg *apiConfig) resetViews(w http.ResponseWriter, _ *http.Request) {
 	cfg.fileserverHits.Store(0)
-	
+
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
 
@@ -43,6 +42,3 @@ func (cfg *apiConfig) middlewareMetricsInc(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r)
 	})
 }
-
-
-

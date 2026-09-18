@@ -4,15 +4,9 @@ import (
 	"encoding/json"
 	"net/http"
 	"strings"
-	"fmt"
 )
 
-type param struct {
-	Body string `json:"body"`
-}
-
-
-type validation struct {}
+type validation struct{}
 
 func (v validation) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	naughtyWords := map[string]struct{}{"kerfuffle": {}, "sharbert": {}, "fornax": {}}
@@ -31,22 +25,19 @@ func (v validation) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, 400, "Chirp is too long", nil)
 		return
 	}
-	
+
 	words := strings.Fields(params.Body)
 
 	for i, word := range words {
-		fmt.Println("Comparing : " + word)
 		if _, ok := naughtyWords[strings.ToLower(word)]; ok {
-			fmt.Println("true")
 			words[i] = "****"
 		}
 	}
 
-	fmt.Println(words)
-	responseBody := response {
-		Valid: true,
+	responseBody := response{
+		Valid:       true,
 		CleanedBody: strings.Join(words, " "),
 	}
 	respondWithJSON(w, 200, responseBody)
 	return
-} 
+}

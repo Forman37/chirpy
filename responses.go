@@ -1,18 +1,12 @@
 package main
 
 import (
-	"log"
 	"encoding/json"
+	"log"
 	"net/http"
 )
 
-type response struct {
-	Error string `json:"error"`
-	Valid bool `json:"valid"`
-	CleanedBody string `json:"cleaned_body"`
-}
-
-func respondWithError(w http.ResponseWriter, code int, msg string, err error){
+func respondWithError(w http.ResponseWriter, code int, msg string, err error) {
 	if err != nil {
 		log.Printf("Error: %s\n", err)
 	}

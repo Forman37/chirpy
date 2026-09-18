@@ -9,6 +9,7 @@ import (
 type response struct {
 	Error string `json:"error"`
 	Valid bool `json:"valid"`
+	CleanedBody string `json:"cleaned_body"`
 }
 
 func respondWithError(w http.ResponseWriter, code int, msg string, err error){

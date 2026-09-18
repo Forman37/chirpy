@@ -1,0 +1,9 @@
+# Environment variables
+.env
+
+# Build/output
+bin/
+dist/
+
+# OS Files
+.DS_Store

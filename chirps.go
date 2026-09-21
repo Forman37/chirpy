@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/Forman37/chirpy/internal/database"
+	"github.com/google/uuid"
 )
 
 func (c *apiConfig) postChirp(w http.ResponseWriter, r *http.Request) {
@@ -54,4 +55,51 @@ func (c *apiConfig) postChirp(w http.ResponseWriter, r *http.Request) {
 	}
 
 	respondWithJSON(w, 201, responseBody)
+}
+
+func (c *apiConfig) getChirps(w http.ResponseWriter, r *http.Request) {
+	allChirps, err := c.db.GetAllChirps(r.Context())
+	if err != nil {
+		respondWithError(w, 500, "Something went wrong getting chirps", err)
+		return
+	}
+
+	responseBody := []chirpResponse{}
+
+	for _, chirp := range allChirps {
+		newResponse := chirpResponse{
+			ID:        chirp.ID,
+			CreatedAt: chirp.CreatedAt,
+			UpdatedAt: chirp.UpdatedAt,
+			Body:      chirp.Body,
+			UserID:    chirp.UserID,
+		}
+		responseBody = append(responseBody, newResponse)
+	}
+
+	respondWithJSON(w, 200, responseBody)
+}
+
+func (c *apiConfig) getChirp(w http.ResponseWriter, r *http.Request) {
+	chirpID, err := uuid.Parse(r.PathValue("chirpID"))
+	if err != nil {
+		respondWithError(w, 404, "Error with chirp ID: ", err)
+		return
+	}
+
+	newChirp, err := c.db.GetChirp(r.Context(), chirpID)
+	if err != nil {
+		respondWithError(w, 404, "Error fetching chirp", err)
+		return
+	}
+
+	responseBody := chirpResponse{
+		ID:        newChirp.ID,
+		CreatedAt: newChirp.CreatedAt,
+		UpdatedAt: newChirp.UpdatedAt,
+		Body:      newChirp.Body,
+		UserID:    newChirp.UserID,
+	}
+
+	respondWithJSON(w, 200, responseBody)
 }

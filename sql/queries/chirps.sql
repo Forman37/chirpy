@@ -1,3 +1,5 @@
+-- sqlc generate
+
 -- name: CreateChirp :one
 INSERT INTO chirps (id, created_at, updated_at, body, user_id)
 VALUES(
@@ -12,3 +14,10 @@ RETURNING *;
 -- name: DeleteChirp :exec
 DELETE FROM chirps
 WHERE user_id = $1;
+
+-- name: GetAllChirps :many
+SELECT * FROM chirps;
+
+-- name: GetChirp :one
+SELECT * FROM chirps
+WHERE id = $1;

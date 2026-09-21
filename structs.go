@@ -9,9 +9,10 @@ import (
 )
 
 type param struct {
-	Body   string    `json:"body"`
-	Email  string    `json:"email"`
-	UserID uuid.UUID `json:"user_id"`
+	Body     string    `json:"body"`
+	Email    string    `json:"email"`
+	UserID   uuid.UUID `json:"user_id"`
+	Password string    `json:"password"`
 }
 
 type apiConfig struct {
@@ -40,9 +41,4 @@ type chirpResponse struct {
 	UpdatedAt time.Time `json:"updated_at"`
 	Body      string    `json:"body"`
 	UserID    uuid.UUID `json:"user_id"`
-}
-
-type chirpCreation struct {
-	UserID uuid.UUID `json:"user_id"`
-	Body   string    `json:"body"`
 }

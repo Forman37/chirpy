@@ -9,7 +9,9 @@ import (
 )
 
 type param struct {
-	Body string `json:"body"`
+	Body   string    `json:"body"`
+	Email  string    `json:"email"`
+	UserID uuid.UUID `json:"user_id"`
 }
 
 type apiConfig struct {
@@ -22,6 +24,7 @@ type response struct {
 	Error       string `json:"error"`
 	Valid       bool   `json:"valid"`
 	CleanedBody string `json:"cleaned_body"`
+	Message     string `json:"message"`
 }
 
 type userResponse struct {
@@ -29,4 +32,17 @@ type userResponse struct {
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 	Email     string    `json:"email"`
+}
+
+type chirpResponse struct {
+	ID        uuid.UUID `json:"id"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+	Body      string    `json:"body"`
+	UserID    uuid.UUID `json:"user_id"`
+}
+
+type chirpCreation struct {
+	UserID uuid.UUID `json:"user_id"`
+	Body   string    `json:"body"`
 }

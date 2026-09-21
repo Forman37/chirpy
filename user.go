@@ -10,7 +10,7 @@ func (conf *apiConfig) createUser(w http.ResponseWriter, r *http.Request) {
 
 	// Set up JSON decoder for expected json response. Request in format
 	// {
-	//		"email": "user@example.com"
+	//		"email":"user@example.com"
 	// }
 	decoder := json.NewDecoder(r.Body)
 	params := param{}
@@ -20,7 +20,7 @@ func (conf *apiConfig) createUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	email := params.Body
+	email := params.Email
 	newUser, err := conf.db.CreateUser(r.Context(), email)
 	if err != nil {
 		respondWithError(w, 500, "Issue creating user", err)
@@ -31,13 +31,27 @@ func (conf *apiConfig) createUser(w http.ResponseWriter, r *http.Request) {
 		ID:        newUser.ID,
 		CreatedAt: newUser.CreatedAt,
 		UpdatedAt: newUser.UpdatedAt,
-		Email:     newUser.Email,
+		Email:     email,
 	}
 
 	respondWithJSON(w, 201, responseBody)
-	return
 }
 
 func (conf *apiConfig) resetUsers(w http.ResponseWriter, r *http.Request) {
-	return
+	if conf.platform != "dev" {
+		respondWithError(w, 403, "403 Forbidden", nil)
+	}
+
+	err := conf.db.DeleteAllUsers(r.Context())
+	if err != nil {
+		respondWithError(w, 500, "Error deleting all users", err)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/plain charset:utf-8")
+	responseBody := response{
+		Message: "OK",
+	}
+
+	respondWithJSON(w, 200, responseBody)
 }

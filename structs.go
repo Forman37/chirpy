@@ -9,16 +9,18 @@ import (
 )
 
 type param struct {
-	Body     string    `json:"body"`
-	Email    string    `json:"email"`
-	UserID   uuid.UUID `json:"user_id"`
-	Password string    `json:"password"`
+	Body      string    `json:"body"`
+	Email     string    `json:"email"`
+	UserID    uuid.UUID `json:"user_id"`
+	Password  string    `json:"password"`
+	ExpiresIn int       `json:"expires_in_seconds"`
 }
 
 type apiConfig struct {
 	fileserverHits atomic.Int32
 	db             *database.Queries
 	platform       string
+	jwtSecret      string
 }
 
 type response struct {
@@ -33,6 +35,7 @@ type userResponse struct {
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 	Email     string    `json:"email"`
+	Token     string    `json:"token"`
 }
 
 type chirpResponse struct {

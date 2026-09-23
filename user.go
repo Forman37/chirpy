@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"net/http"
+	"time"
 
 	"github.com/Forman37/chirpy/internal/auth"
 	"github.com/Forman37/chirpy/internal/database"
@@ -84,6 +85,14 @@ func (c *apiConfig) login(w http.ResponseWriter, r *http.Request) {
 
 	email := params.Email
 	password := params.Password
+	expiresIn := params.ExpiresIn
+
+	if expiresIn == 0 {
+		expiresIn = 3600
+	}
+	if expiresIn > 3600 {
+		expiresIn = 3600
+	}
 
 	user, err := c.db.FetchUser(r.Context(), email)
 	if err != nil {
@@ -97,11 +106,14 @@ func (c *apiConfig) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	token, err := auth.MakeJWT(user.ID, c.jwtSecret, (time.Duration(expiresIn) * time.Second))
+
 	responseBody := userResponse{
 		ID:        user.ID,
 		CreatedAt: user.CreatedAt,
 		UpdatedAt: user.UpdatedAt,
 		Email:     user.Email,
+		Token:     token,
 	}
 
 	respondWithJSON(w, 200, responseBody)

@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/Forman37/chirpy/internal/auth"
 	"github.com/Forman37/chirpy/internal/database"
 	"github.com/google/uuid"
 )
@@ -14,11 +15,23 @@ func (c *apiConfig) postChirp(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 
+	bearer, err := auth.GetBearerToken(r.Header)
+	if err != nil {
+		respondWithError(w, 401, "Unauthorized", err)
+		return
+	}
+
+	userID, err := auth.ValidateJWT(bearer, c.jwtSecret)
+	if err != nil {
+		respondWithError(w, 401, "Unauthorized", err)
+	}
+
 	decoder := json.NewDecoder(r.Body)
 	params := param{}
-	err := decoder.Decode(&params)
+
+	err = decoder.Decode(&params)
 	if err != nil {
-		respondWithError(w, 500, "Something went wrong", err)
+		respondWithError(w, 500, "Something went wrong decoding params", err)
 		return
 	}
 
@@ -36,7 +49,7 @@ func (c *apiConfig) postChirp(w http.ResponseWriter, r *http.Request) {
 	}
 
 	chirpBody := database.CreateChirpParams{
-		UserID: params.UserID,
+		UserID: userID,
 		Body:   strings.Join(words, " "),
 	}
 

@@ -8,7 +8,7 @@ import (
 
 func respondWithError(w http.ResponseWriter, code int, msg string, err error) {
 	if err != nil {
-		log.Printf("Error: %s\n", err)
+		log.Printf("%s %s\n", msg, err)
 	}
 
 	responseBody := response{

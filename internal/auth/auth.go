@@ -1,10 +1,14 @@
 package auth
 
 import (
+	"errors"
 	"log"
+	"net/http"
+	"strings"
 	"time"
 
 	"github.com/alexedwards/argon2id"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 )
 
@@ -29,5 +33,62 @@ func CheckPasswordHash(password, hash string) (bool, error) {
 }
 
 func MakeJWT(userID uuid.UUID, tokenSecret string, expiresIn time.Duration) (string, error) {
-	return "", nil
+
+	claims := jwt.RegisteredClaims{
+		Issuer:    "chirpy-access",
+		IssuedAt:  jwt.NewNumericDate(time.Now()),
+		ExpiresAt: jwt.NewNumericDate(time.Now().Add(expiresIn)),
+		Subject:   userID.String(),
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	byteSecret := []byte(tokenSecret)
+	ss, err := token.SignedString(byteSecret)
+	return ss, err
+}
+
+func ValidateJWT(tokenString, tokenSecret string) (uuid.UUID, error) {
+	token, err := jwt.ParseWithClaims(
+		tokenString,
+		&jwt.RegisteredClaims{},
+		func(token *jwt.Token) (any, error) {
+			return []byte(tokenSecret), nil
+		})
+
+	if err != nil {
+		log.Println("Returning Here at Parse")
+		return uuid.Nil, err
+	}
+
+	id, err := token.Claims.GetSubject()
+	if err != nil {
+		log.Println("Returning Here at GetSubject")
+		return uuid.Nil, err
+	}
+
+	returnID, err := uuid.Parse(id)
+	if err != nil {
+		log.Println("Returning Here at Parse")
+		return uuid.Nil, err
+	}
+	log.Println("Returning Complete")
+	return returnID, nil
+}
+
+func GetBearerToken(headers http.Header) (string, error) {
+	//log.Printf("Headers for getting bearer token : %v\n", headers)
+	authHeader := headers.Get("Authorization")
+	if authHeader == "" {
+		return "", errors.New("No authorization header found")
+	}
+
+	const prefix = "Bearer "
+	if !strings.HasPrefix(authHeader, prefix) {
+		return "", errors.New("No bearer token found in header")
+	}
+
+	token := strings.TrimPrefix(authHeader, prefix)
+
+	return token, nil
 }

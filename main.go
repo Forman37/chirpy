@@ -13,10 +13,13 @@ import (
 )
 
 func main() {
-	// START: DB initiation and opening
+	// Load env vars
 	godotenv.Load()
+	platform := os.Getenv("PLATFORM")
 	dbURL := os.Getenv("DB_URL")
+	secret := os.Getenv("JWTSECRET")
 
+	// START: DB initiation and opening
 	db, err := sql.Open("postgres", dbURL)
 	if err != nil {
 		log.Fatal(err)
@@ -32,9 +35,6 @@ func main() {
 	dbQueries := database.New(db)
 	// END : DB initiation and opening
 
-	// Load PLATFORM env into variable
-	platform := os.Getenv("PLATFORM")
-
 	const filepathRoot = "."
 	const port = "8080"
 
@@ -43,6 +43,7 @@ func main() {
 		fileserverHits: atomic.Int32{},
 		db:             dbQueries,
 		platform:       platform,
+		jwtSecret:      secret,
 	}
 
 	// Server MUX and fileserver initialization
@@ -58,7 +59,7 @@ func main() {
 	)
 
 	mux.Handle("GET /api/healthz", healthHandler{})
-	mux.HandleFunc("GET /admin/metrics", apiCfg.checkViews)
+	//mux.HandleFunc("GET /admin/metrics", apiCfg.checkViews)
 	mux.Handle("POST /api/validate_chirp", validation{})
 	mux.HandleFunc("POST /api/users", apiCfg.createUser)
 	mux.HandleFunc("POST /admin/reset", apiCfg.resetUsers)

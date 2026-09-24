@@ -15,3 +15,7 @@ DELETE FROM users;
 -- name: FetchUser :one
 SELECT * from users
 WHERE email = $1;
+
+-- name: GetUserFromRefreshToken :one
+SELECT * FROM users
+WHERE id = $1;

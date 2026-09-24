@@ -13,9 +13,8 @@ func (v validation) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 
-	decoder := json.NewDecoder(r.Body)
 	params := param{}
-	err := decoder.Decode(&params)
+	err := parseRequestBody(r, &params)
 	if err != nil {
 		respondWithError(w, 500, "Something went wrong", err)
 		return

@@ -1,0 +1,5 @@
+// Update database in sql/schema
+goose postgres "postgres://jamesforman:@localhost:5432/chirpy" up
+
+// Update queries from /
+sqlc generate

@@ -1,7 +1,7 @@
 package main
 
 import (
-	"encoding/json"
+	"log"
 	"net/http"
 	"time"
 
@@ -10,15 +10,14 @@ import (
 )
 
 func (conf *apiConfig) createUser(w http.ResponseWriter, r *http.Request) {
+	log.Println("Creating user")
 	w.Header().Set("Content-Type", "application/json")
-
 	// Set up JSON decoder for expected json response. Request in format
 	// {
 	//		"email":"user@example.com"
 	// }
-	decoder := json.NewDecoder(r.Body)
 	params := param{}
-	err := decoder.Decode(&params)
+	err := parseRequestBody(r, &params)
 	if err != nil {
 		respondWithError(w, 500, "Something went wrong", err)
 		return
@@ -55,6 +54,7 @@ func (conf *apiConfig) createUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (conf *apiConfig) resetUsers(w http.ResponseWriter, r *http.Request) {
+	log.Println("Resetting User")
 	if conf.platform != "dev" {
 		respondWithError(w, 403, "403 Forbidden", nil)
 	}
@@ -74,10 +74,10 @@ func (conf *apiConfig) resetUsers(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *apiConfig) login(w http.ResponseWriter, r *http.Request) {
+	log.Println("Logging in")
 	w.Header().Set("Content-Type", "application/json")
-	decoder := json.NewDecoder(r.Body)
 	params := param{}
-	err := decoder.Decode(&params)
+	err := parseRequestBody(r, &params)
 	if err != nil {
 		respondWithError(w, 500, "Something went wrong", err)
 		return
@@ -106,15 +106,44 @@ func (c *apiConfig) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := auth.MakeJWT(user.ID, c.jwtSecret, (time.Duration(expiresIn) * time.Second))
+	token, err := auth.MakeJWT(user.ID, c.jwtSecret)
+	if err != nil {
+		respondWithError(w, 500, "Error making token", err)
+		return
+	}
+	refreshToken := auth.MakeRefreshToken()
+
+	newRefreshTokenParams := database.CreateRefreshTokenParams{
+		Token:     refreshToken,
+		UserID:    user.ID,
+		ExpiresAt: time.Now().Add(1 * time.Hour),
+	}
+
+	newToken, err := c.db.CreateRefreshToken(r.Context(), newRefreshTokenParams)
+	if err != nil {
+		respondWithError(w, 500, "Error creating new refresh token", err)
+		return
+	}
 
 	responseBody := userResponse{
-		ID:        user.ID,
-		CreatedAt: user.CreatedAt,
-		UpdatedAt: user.UpdatedAt,
-		Email:     user.Email,
-		Token:     token,
+		ID:           user.ID,
+		CreatedAt:    user.CreatedAt,
+		UpdatedAt:    user.UpdatedAt,
+		Email:        user.Email,
+		Token:        token,
+		RefreshToken: newToken.Token,
 	}
 
 	respondWithJSON(w, 200, responseBody)
+}
+
+func (c *apiConfig) updateUser(w http.ResponseWriter, r *http.Request) {
+	token, err := getAccessTokenFromRequest(r)
+	if err != nil {
+		respondWithError(w, 401, "Unauthorized", err)
+		return
+	}
+
+	user, err := auth.ValidateJWT(token, c.jwtSecret)
+
 }

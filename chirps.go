@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"strings"
 
@@ -11,19 +12,24 @@ import (
 )
 
 func (c *apiConfig) postChirp(w http.ResponseWriter, r *http.Request) {
+	log.Println("Posting Chirp")
 	naughtyWords := map[string]struct{}{"kerfuffle": {}, "sharbert": {}, "fornax": {}}
 
 	w.Header().Set("Content-Type", "application/json")
 
 	bearer, err := auth.GetBearerToken(r.Header)
 	if err != nil {
-		respondWithError(w, 401, "Unauthorized", err)
+		respondWithError(w, 401, "Unauthorized Header", err)
 		return
 	}
 
+	log.Printf("Bearer: %q", bearer)
+	log.Printf("JWT segments: %d", len(strings.Split(bearer, ".")))
+
 	userID, err := auth.ValidateJWT(bearer, c.jwtSecret)
 	if err != nil {
-		respondWithError(w, 401, "Unauthorized", err)
+		respondWithError(w, 401, "Unauthorized JWT", err)
+		return
 	}
 
 	decoder := json.NewDecoder(r.Body)
@@ -71,6 +77,7 @@ func (c *apiConfig) postChirp(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *apiConfig) getChirps(w http.ResponseWriter, r *http.Request) {
+	log.Println("Getting chirps")
 	allChirps, err := c.db.GetAllChirps(r.Context())
 	if err != nil {
 		respondWithError(w, 500, "Something went wrong getting chirps", err)
@@ -94,6 +101,7 @@ func (c *apiConfig) getChirps(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *apiConfig) getChirp(w http.ResponseWriter, r *http.Request) {
+	log.Println("Getting Chirp")
 	chirpID, err := uuid.Parse(r.PathValue("chirpID"))
 	if err != nil {
 		respondWithError(w, 404, "Error with chirp ID: ", err)

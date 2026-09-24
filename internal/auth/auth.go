@@ -1,6 +1,8 @@
 package auth
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"errors"
 	"log"
 	"net/http"
@@ -32,7 +34,8 @@ func CheckPasswordHash(password, hash string) (bool, error) {
 	return match, nil
 }
 
-func MakeJWT(userID uuid.UUID, tokenSecret string, expiresIn time.Duration) (string, error) {
+func MakeJWT(userID uuid.UUID, tokenSecret string) (string, error) {
+	expiresIn := time.Hour * 1
 
 	claims := jwt.RegisteredClaims{
 		Issuer:    "chirpy-access",
@@ -49,6 +52,7 @@ func MakeJWT(userID uuid.UUID, tokenSecret string, expiresIn time.Duration) (str
 }
 
 func ValidateJWT(tokenString, tokenSecret string) (uuid.UUID, error) {
+	log.Println("Validating JWT")
 	token, err := jwt.ParseWithClaims(
 		tokenString,
 		&jwt.RegisteredClaims{},
@@ -57,7 +61,7 @@ func ValidateJWT(tokenString, tokenSecret string) (uuid.UUID, error) {
 		})
 
 	if err != nil {
-		log.Println("Returning Here at Parse")
+		log.Println("Returning Here at Parse of claims")
 		return uuid.Nil, err
 	}
 
@@ -69,7 +73,7 @@ func ValidateJWT(tokenString, tokenSecret string) (uuid.UUID, error) {
 
 	returnID, err := uuid.Parse(id)
 	if err != nil {
-		log.Println("Returning Here at Parse")
+		log.Println("Returning Here at Parse of UUID")
 		return uuid.Nil, err
 	}
 	log.Println("Returning Complete")
@@ -91,4 +95,12 @@ func GetBearerToken(headers http.Header) (string, error) {
 	token := strings.TrimPrefix(authHeader, prefix)
 
 	return token, nil
+}
+
+func MakeRefreshToken() string {
+	key := make([]byte, 32)
+	rand.Read(key)
+	randStr := hex.EncodeToString(key)
+
+	return randStr
 }

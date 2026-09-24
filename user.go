@@ -145,5 +145,47 @@ func (c *apiConfig) updateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user, err := auth.ValidateJWT(token, c.jwtSecret)
+	if err != nil {
+		respondWithError(w, 401, "Unauthorized Token", err)
+		return
+	}
 
+	params := param{}
+	err = parseRequestBody(r, &params)
+	if err != nil {
+		respondWithError(w, 500, "Incorrect arguments", err)
+		return
+	}
+
+	password := params.Password
+	passHash, err := auth.HashPassword(password)
+	if err != nil {
+		respondWithError(w, 500, "Password not hashed correctly", err)
+		return
+	}
+
+	updateParams := database.UpdateUserParams{
+		ID:             user,
+		Email:          params.Email,
+		HashedPassword: passHash,
+	}
+	err = c.db.UpdateUser(r.Context(), updateParams)
+	if err != nil {
+		respondWithError(w, 500, "Error updating user", err)
+		return
+	}
+
+	newUser, err := c.db.FetchUser(r.Context(), params.Email)
+	if err != nil {
+		respondWithError(w, 500, "Error fetching user after update", err)
+	}
+
+	responseBody := userResponse{
+		Email:     newUser.Email,
+		ID:        newUser.ID,
+		CreatedAt: newUser.CreatedAt,
+		UpdatedAt: newUser.UpdatedAt,
+	}
+
+	respondWithJSON(w, 200, responseBody)
 }

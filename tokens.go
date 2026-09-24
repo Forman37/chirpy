@@ -1,10 +1,8 @@
 package main
 
 import (
-	"errors"
 	"log"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/Forman37/chirpy/internal/auth"

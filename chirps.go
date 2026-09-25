@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"log"
 	"net/http"
 	"strings"
@@ -75,10 +76,44 @@ func (c *apiConfig) postChirp(w http.ResponseWriter, r *http.Request) {
 
 func (c *apiConfig) getChirps(w http.ResponseWriter, r *http.Request) {
 	log.Println("Getting chirps")
-	allChirps, err := c.db.GetAllChirps(r.Context())
-	if err != nil {
-		respondWithError(w, 500, "Something went wrong getting chirps", err)
-		return
+	author_id := r.URL.Query().Get("author_id")
+	sort := r.URL.Query().Get("sort")
+
+	var allChirps []database.Chirp
+	if author_id != "" {
+		uuidAuthId, err := uuid.Parse(author_id)
+		if err != nil {
+			respondWithError(w, 401, "Malformed author_id", err)
+			return
+		}
+		if sort == "asc" {
+			allChirps, err = c.db.GetChirpsForUser(r.Context(), uuidAuthId)
+			if err != nil {
+				respondWithError(w, 500, "Something went wrong getting chirps", err)
+				return
+			}
+		} else {
+			allChirps, err = c.db.GetChirpsForUserDesc(r.Context(), uuidAuthId)
+			if err != nil {
+				respondWithError(w, 500, "Something went wrong getting chirps", err)
+				return
+			}
+		}
+	} else {
+		var err = errors.New("")
+		if sort == "asc" {
+			allChirps, err = c.db.GetAllChirps(r.Context())
+			if err != nil {
+				respondWithError(w, 500, "Something went wrong getting chirps", err)
+				return
+			}
+		} else {
+			allChirps, err = c.db.GetAllChirpsDesc(r.Context())
+			if err != nil {
+				respondWithError(w, 500, "Something went wrong getting chirps", err)
+				return
+			}
+		}
 	}
 
 	responseBody := []chirpResponse{}

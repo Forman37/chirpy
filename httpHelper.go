@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"errors"
+	"log"
 	"net/http"
 	"strings"
 )
@@ -25,6 +26,7 @@ func getAccessTokenFromRequest(r *http.Request) (string, error) {
 func parseRequestBody(r *http.Request, b any) error {
 	decoder := json.NewDecoder(r.Body)
 
+	log.Println(r.Body)
 	err := decoder.Decode(b)
 	if err != nil {
 		return err

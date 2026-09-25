@@ -23,9 +23,6 @@ func (c *apiConfig) postChirp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Printf("Bearer: %q", bearer)
-	log.Printf("JWT segments: %d", len(strings.Split(bearer, ".")))
-
 	userID, err := auth.ValidateJWT(bearer, c.jwtSecret)
 	if err != nil {
 		respondWithError(w, 401, "Unauthorized JWT", err)
@@ -123,4 +120,51 @@ func (c *apiConfig) getChirp(w http.ResponseWriter, r *http.Request) {
 	}
 
 	respondWithJSON(w, 200, responseBody)
+}
+
+func (c *apiConfig) deleteChirp(w http.ResponseWriter, r *http.Request) {
+	log.Println("Deleting Chirp")
+	token, err := getAccessTokenFromRequest(r)
+	if err != nil {
+		respondWithError(w, 401, "Unauthorized", err)
+		return
+	}
+
+	user, err := auth.ValidateJWT(token, c.jwtSecret)
+	if err != nil {
+		respondWithError(w, 401, "Unauthorized Token", err)
+		return
+	}
+
+	chirpIDString := r.PathValue("chirpID")
+	chirpID, err := uuid.Parse(chirpIDString)
+	if err != nil {
+		respondWithError(w, 401, "Invalid ID", err)
+		return
+	}
+
+	// Verify user is owner of chirp
+	chirp, err := c.db.GetChirp(r.Context(), chirpID)
+	if err != nil {
+		respondWithError(w, 404, "Error fetching chirp", err)
+		return
+	}
+	if chirp.UserID != user {
+		respondWithError(w, 403, "Unauthorized to Delete chirp", nil)
+		return
+	}
+	// END : Verify user is owner of chirp
+
+	chirpParams := database.DeleteChirpParams{
+		ID:     chirpID,
+		UserID: user,
+	}
+
+	err = c.db.DeleteChirp(r.Context(), chirpParams)
+	if err != nil {
+		respondWithError(w, 403, "Unauthorized to delete this Chirp", err)
+		return
+	}
+
+	respondWithJSON(w, 204, nil)
 }

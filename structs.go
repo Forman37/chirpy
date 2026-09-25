@@ -21,6 +21,7 @@ type apiConfig struct {
 	db             *database.Queries
 	platform       string
 	jwtSecret      string
+	polkaKey       string
 }
 
 type response struct {
@@ -37,6 +38,7 @@ type userResponse struct {
 	Email        string    `json:"email"`
 	Token        string    `json:"token"`
 	RefreshToken string    `json:"refresh_token"`
+	IsChripyRed  bool      `json:"is_chirpy_red"`
 }
 
 type chirpResponse struct {

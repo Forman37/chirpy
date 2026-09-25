@@ -18,6 +18,7 @@ func main() {
 	platform := os.Getenv("PLATFORM")
 	dbURL := os.Getenv("DB_URL")
 	secret := os.Getenv("JWTSECRET")
+	pKey := os.Getenv("POLKA_KEY")
 
 	// START: DB initiation and opening
 	db, err := sql.Open("postgres", dbURL)
@@ -44,6 +45,7 @@ func main() {
 		db:             dbQueries,
 		platform:       platform,
 		jwtSecret:      secret,
+		polkaKey:       pKey,
 	}
 
 	// Server MUX and fileserver initialization
@@ -71,6 +73,7 @@ func main() {
 	mux.HandleFunc("POST /api/refresh", apiCfg.refreshRefreshToken)
 	mux.HandleFunc("POST /api/revoke", apiCfg.revokeRefreshToken)
 	mux.HandleFunc("PUT /api/users", apiCfg.updateUser)
+	mux.HandleFunc("POST /api/polka/webhooks", apiCfg.updateUserToChirpyRed)
 	// END : Handlers and Endpoints
 
 	// Setup server with mux as the handler
